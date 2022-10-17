@@ -5,6 +5,9 @@ import { trpc } from "../utils/trpc";
 
 const Home: NextPage = () => {
   const hello = trpc.example.hello.useQuery({ text: "from tRPC" });
+  const { isLoading, data } = trpc.user.all.useQuery()
+
+  !isLoading && console.log('User', data)
 
   return (
     <>

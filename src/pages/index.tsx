@@ -1,30 +1,15 @@
-import type { NextPage } from "next";
+import type { NextPage } from "next"
 import Link from 'next/link'
-import React, { useState, useEffect } from 'react'
-import Head from "next/head";
-import { signIn, signOut, useSession } from "next-auth/react";
-import { trpc } from "../utils/trpc";
-import { Application, User, Visibility } from '@prisma/client'
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  useReactTable,
-	flexRender
-} from '@tanstack/react-table'
-
-type ApplicationWithAuthor = Application & { author: User }
+import React from 'react'
+import Head from "next/head"
+import { signIn, signOut, useSession } from "next-auth/react"
+import { trpc } from "../utils/trpc"
+import { AppRouter } from '../server/trpc/router/_app'
+import { inferProcedureOutput } from "@trpc/server"
+import { Visibility } from "@prisma/client"
 
 const Home: NextPage = () => {
   const { isLoading, data } = trpc.apps.all.useQuery() 
-  const createAppMutation  = trpc.apps.create.useMutation()
-
-  const createApp = () => {
-    createAppMutation.mutate({
-      name: "ClothoApp",
-      description: "Clotho is an application created years ago by Lattice Automation to build a new infrastructure for connected data model",
-      visibility: Visibility.PUBLIC
-    })
-  }
 
   return (
     <>
@@ -34,101 +19,88 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="container mx-auto flex min-h-screen flex-col items-center justify-center p-4">
-        <h1 className="text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem]">
-          List of <span className="text-purple-300">Lattice</span> Apps
-        </h1>
-				<div>
-					<div className="border-2 border-black w-8 h-8 flex items-center justify-center rounded font-bold text-lg">
-						<button placeholder="Add an app" onClick={createApp}><h2>+</h2></button>
-					</div>
-				</div>
-        <ul>
-          { !isLoading && <AppsTable apps={data} /> }
-        </ul>
+				{ isLoading ? <Loading /> : (
+					<>
+						<h1 className="text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem]">
+							List of <span className="text-purple-300">Lattice</span> Apps
+						</h1>
+						<div className="flex w-full max-w-4xl flex-row-reverse mb-3 mt-7">
+							<Link href="/add">
+								<button>
+									<div className="px-4 py-2 border-2 border-black flex items-center justify-center rounded font-bold text-gray-700 text-lg hover:bg-gray-700 hover:text-white">
+										<div className="text-xl font-bold mr-3">Create a new app</div>
+										<h2 className="text-lg">+</h2>
+									</div>
+								</button>
+							</Link>
+						</div>
+						<div className="flex flex-col w-full mx-auto justify-center items-center">
+							{ data && Apps(data) }
+						</div>
+					</>
+				)}
       </main>
     </>
-  );
-};
-
-export default Home;
-
-const columnHelper = createColumnHelper<ApplicationWithAuthor>()
-
-const columns = [
-  columnHelper.accessor('name', {
-		id: 'name',
-    header: 'Name',
-  }),
-  columnHelper.accessor(row => row.author.name, {
-		id: 'author',
-    header: 'Author',
-  }),
-  columnHelper.accessor(row => row.description, {
-		id: 'description',
-    header: 'Description',
-  }),
-]
-
-const AppsTable = ({ apps }: { apps?: ApplicationWithAuthor[] }) => {
-	const [data, setData] = useState<ApplicationWithAuthor[]>([])
-
-	useEffect(() => {
-		if (apps) {
-			setData(apps)
-		}
-	}, [apps])
-
-	const table = useReactTable({
-		data,
-		columns,
-		getCoreRowModel: getCoreRowModel()
-	})	
-
-	return (
-		<div>
-			<table>
-				<thead>
-					<tr>
-						{table.getHeaderGroups().map(headerGroup => (
-							<tr key={headerGroup.id}>
-								{headerGroup.headers.map(header => (
-									<th key={header.id} className="p-4">
-										{header.isPlaceholder
-											? null
-											: flexRender(
-													header.column.columnDef.header,
-													header.getContext()
-												)}
-									</th>
-								))}
-							</tr>
-						))}
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						{table.getRowModel().rows.map(row => (
-							<tr key={row.id}>
-								{row.getVisibleCells().map(cell => (
-									<td key={cell.id} className="p-4">
-										{flexRender(cell.column.columnDef.cell, cell.getContext())}
-									</td>
-								))}
-							</tr>
-						))}
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		
-	)
-	
+  )
 }
 
-const AuthShowcase: React.FC = () => {
-  const { data: secretMessage } = trpc.auth.getSecretMessage.useQuery();
+const Loading = () => {
+	return (
+		<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 animate-spin">
+			<path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+		</svg>
+	)
+}
 
-  const { data: sessionData } = useSession();
+const Apps = (apps: inferProcedureOutput<AppRouter['apps']['all']>) => {
+   return apps.map(({ name, description, visibility, author }) =>  (
+      <div className="w-full max-w-4xl my-1 border border-gray-400 lg:border-gray-400 bg-white rounded p-4 flex flex-col justify-between leading-normal">
+        <div className="mb-8">
+          <p className="text-sm text-gray-600 flex items-center">
+          { visibility === Visibility.PRIVATE ? <Private /> : <Public /> }
+          </p>
+          <div className="text-gray-900 font-bold text-xl mb-2">{ name }</div>
+          <p className="text-gray-700 text-base">{ description }</p>
+        </div>
+        <div className="flex items-center">
+          <div className="text-sm">
+            <p className="text-gray-900 leading-none">{ author.name }</p>
+            <p className="text-gray-600">Aug 18</p>
+          </div>
+        </div>
+      </div>
+    )
+  )
+}
+
+const Public = () => {
+	return(
+		<>
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+				<path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+			</svg>
+			<span className="ml-2">Public</span>
+		</>
+	)
+}
+
+const Private = () => {
+	return(
+		<>
+			<svg className="fill-current text-gray-500 w-3 h-3 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+				<path d="M4 8V6a6 6 0 1 1 12 0v2h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-8c0-1.1.9-2 2-2h1zm5 6.73V17h2v-2.27a2 2 0 1 0-2 0zM7 6v2h6V6a3 3 0 0 0-6 0z" />
+			</svg>
+			Private
+		</>
+	)
+}
+
+export default Home
+
+const AuthShowcase: React.FC = () => {
+  const { data: secretMessage } = trpc.auth.getSecretMessage.useQuery()
+
+  const { data: sessionData } = useSession()
   console.log(sessionData)
 
   return (
@@ -148,5 +120,5 @@ const AuthShowcase: React.FC = () => {
         {sessionData ? "Sign out" : "Sign in"}
       </button>
     </div>
-  );
-};
+  )
+}

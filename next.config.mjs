@@ -21,4 +21,10 @@ export default defineNextConfig({
     locales: ["en"],
     defaultLocale: "en",
   },
+  images: {
+    domains: ["lh3.googleusercontent.com"]
+  },
+  experimental: {
+    urlImports: ["https://astrolabium.s3.sa-east-1.amazonaws.com/assets"]
+  }
 });

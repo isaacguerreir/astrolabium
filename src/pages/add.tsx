@@ -1,26 +1,22 @@
 import type { NextPage } from "next";
 import Head from 'next/head'
 import {useRouter} from 'next/router'
-import { useForm, FieldValues } from "react-hook-form";
-import { Visibility } from '@prisma/client'
+import { useForm } from "react-hook-form";
+import { zodResolver } from '@hookform/resolvers/zod'
 import { trpc } from "../utils/trpc";
-
-interface AppInput {
-  name: string
-  description: string
-  visibility: Visibility
-}
+import { createAppSchema, CreateAppInput } from '../types/add/apps'
 
 const AddPage: NextPage = () => {
-  const createAppMutation  = trpc.apps.create.useMutation()
+  const mutation  = trpc.apps.create.useMutation({
+    onSuccess: async() => router.push('/')
+  })
   const router = useRouter()
-	const { register, handleSubmit, watch, formState: { errors } } = useForm();
+	const { register, handleSubmit, formState: { errors } } = useForm<CreateAppInput>({ resolver: zodResolver(createAppSchema) });
 
-  const onSubmit = (input: AppInput) => {
-    createAppMutation.mutate({
+  const onSubmit = (input: CreateAppInput) => {
+    mutation.mutate({
       ...input
     })
-    router.push('/')
   }
 
   return (
@@ -42,7 +38,7 @@ const AddPage: NextPage = () => {
 								Name
 							</label>
 							<input {...register('name', {required: true} )} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 placeholder:text-sm" id="grid-password" placeholder="What is the name of your application?" />
-              { errors.name && <div className="text-sm text-red-400 font-bold">Field name is required.</div> }
+              { errors.name && <div className="text-sm text-red-400 font-bold">{errors.name.message}</div> }
 						</div>
 					</div>
 
@@ -52,7 +48,17 @@ const AddPage: NextPage = () => {
 								Description
 							</label>
 							<textarea {...register('description', {required: true} )} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 placeholder:text-sm" id="grid-password" placeholder="How can you describe your application in one or two paragraphs?" />
-              { errors.description && <div className="text-sm text-red-400 font-bold">Field description is required.</div> }
+              { errors.description && <div className="text-sm text-red-400 font-bold">{errors.description.message}</div> }
+						</div>
+					</div>
+
+					<div className="flex flex-wrap -mx-3 mb-4">
+						<div className="w-full px-3">
+							<label className="block uppercase tracking-wide text-purple-400 text-xs font-bold mb-2">
+								URL
+							</label>
+							<input {...register('url')} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 placeholder:text-sm" id="grid-password" placeholder="What is the name of your application?" />
+              { errors.url && <div className="text-sm text-red-400 font-bold">{errors.url.message}</div> }
 						</div>
 					</div>
 

@@ -1,22 +1,17 @@
-import { object, string, nativeEnum, TypeOf } from "zod";
+import { ApplicationType } from '@prisma/client' 
+import { object, string, TypeOf } from "zod";
 import { Context } from '../context'
 import { router, protectedProcedure, publicProcedure } from "../trpc";
-import { errorFieldValidation, errorStringValidation } from '../utils/error'
-import { ApplicationType, Visibility } from '@prisma/client' 
+import { createAppSchema, CreateAppInput } from "../../../types/add/apps";
+import { errorStringValidation } from '../../../utils/error';
 
-const createAppSchema = object({
-    name: string(errorFieldValidation("Name field is required.", "Invalid Type: Name could only be a string type."))
-      .min(3, errorStringValidation("Name field must have at least 3 characters."))
-      .max(25, errorStringValidation("Name field must have less than 25 characters.")),
-    description: string()
-      .min(3, errorStringValidation("Name field must have at least 3 characters."))
-      .max(255, errorStringValidation("Name field must have less than 255 characters.")),
-    visibility: nativeEnum(Visibility) 
-  }).required()
+const deleteAppSchema = object({
+  id: string().uuid(errorStringValidation('Field id must be of type uuid'))
+}) 
 
-export type CreateAppInput = TypeOf<typeof createAppSchema> 
+export type DeleteAppInput = TypeOf<typeof deleteAppSchema>
 
-const createApp = ({
+const create = ({
   input,
   ctx
 }: {
@@ -31,6 +26,7 @@ const createApp = ({
 				description: input.description,
 				visibility: input.visibility,
 				type: ApplicationType.VIEWER,
+        url: input.url,
         author: { connect: { id: user?.id }}
 			}
 		})
@@ -40,7 +36,7 @@ const createApp = ({
 	}
 } 
 
-const findAll = ({
+const all = ({
   ctx
 }: {
   ctx: Context
@@ -48,10 +44,32 @@ const findAll = ({
   return ctx.prisma.application.findMany({ include: { author: true }})
 }
 
+// TODO: Use detele all instead of only delete
+const remove = ({
+  input,
+  ctx
+}: {
+  input: DeleteAppInput,
+  ctx: Context
+}) => {
+		const app = ctx.prisma.application.delete({
+      where: {
+        id: input.id
+      }
+    })
+
+		console.log('APP=', app)
+		return app
+}
+
+
 export const appsRouter = router({
 	all: publicProcedure
-    .query(findAll),
+    .query(all),
   create: protectedProcedure
     .input(createAppSchema)
-    .mutation(createApp)
+    .mutation(create),
+  remove: publicProcedure
+    .input(deleteAppSchema)
+    .mutation(remove)
 });

@@ -17,12 +17,12 @@ datasource db {
 }
 
 model Example {
-  id String @id @default(cuid())
+  id String @id @default(uuid())
 }
 
 // Necessary for Next auth
 model Account {
-  id                String  @id @default(cuid())
+  id                String  @id @default(uuid())
   userId            String
   type              String
   provider          String
@@ -40,7 +40,7 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id @default(uuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -48,13 +48,15 @@ model Session {
 }
 
 model Application {
-  id          String          @id @default(cuid())
+  id          String          @id @default(uuid())
   name        String          @unique
   description String          @db.Text
   type        ApplicationType
+  url         String?
+  visibility  Visibility
   userId      String
   author      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  visibility  Visibility
+  createdAt   DateTime        @default(now())
 }
 
 enum ApplicationType {
@@ -68,11 +70,11 @@ enum Visibility {
 }
 
 model User {
-  id            String        @id @default(cuid())
+  id            String        @id @default(uuid())
   name          String?
   email         String?       @unique
   emailVerified DateTime?
-  image         String?
+  image         String?       
   role          Role          @default(USER)
   accounts      Account[]
   sessions      Session[]

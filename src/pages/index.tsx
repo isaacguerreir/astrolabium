@@ -87,12 +87,24 @@ const Apps = ({ apps, refetch }: { apps: AppsData | undefined, refetch: () => vo
         <div className="mb-8">
           <div className="text-gray-900 font-bold text-xl mb-2">{ name }</div>
           <p className="text-gray-700 text-base">{ description }</p>
-        </div>
-        <div className="flex items-center">
-          <div className="text-sm">
-            <p className="text-gray-900 leading-none">{ author.name }</p>
-            <p className="text-gray-600">Aug 18</p>
+       </div>
+       <div className="flex justify-between">
+          <div className="flex items-center">
+            <div className="text-sm">
+              <p className="text-gray-900 leading-none">{ author.name }</p>
+              <p className="text-gray-600">Aug 18</p>
+            </div>
           </div>
+
+          <Link href={`/runner/${id}`}>
+          <button className="flex border rounded py-2 px-5 border-black">
+            <div className="mr-3 font-bold text-black">Open</div>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+            </svg>
+          </button>
+          </Link>
+
         </div>
       </div>))
 			}

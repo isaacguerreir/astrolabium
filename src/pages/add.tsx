@@ -5,16 +5,24 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from '@hookform/resolvers/zod'
 import { trpc } from "../utils/trpc";
 import { createAppSchema, CreateAppInput } from '../types/add/apps'
+import Nav from "../components/nav";
+import { useState } from "react";
 
 const AddPage: NextPage = () => {
-  const mutation  = trpc.apps.create.useMutation({
-    onSuccess: async() => router.push('/')
-  })
   const router = useRouter()
+  const [errorMessage, setMessage] = useState(false)
 	const { register, handleSubmit, formState: { errors } } = useForm<CreateAppInput>({ resolver: zodResolver(createAppSchema) });
 
+  const { mutate, isError, error }  = trpc.apps.create.useMutation({
+    onSuccess: async() => router.push('/'),
+    onError: async() => {
+      setMessage(true)
+      setInterval(() => setMessage(false), 10000) 
+    }
+  })
+
   const onSubmit = (input: CreateAppInput) => {
-    mutation.mutate({
+    mutate({
       ...input
     })
   }
@@ -26,12 +34,28 @@ const AddPage: NextPage = () => {
         <meta name="description" content="Astrolabium application" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <header>
+        <Nav />
+      </header>
       <main className="container mx-auto flex min-h-screen flex-col items-center justify-center p-4">
         <h1 className="text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem] mb-6">
           Add your <span className="text-purple-300">app</span>
         </h1>
 
 				<div className="w-full max-w-xl">
+          {
+            isError && errorMessage && (
+              <div className={`flex flex-row-reverse mb-3`} >
+                <div className="p-2 bg-red-500 items-center text-indigo-100 leading-none lg:rounded-full flex lg:inline-flex" role="alert">
+                  <span className="flex rounded-full bg-red-800 uppercase px-2 py-1 text-xs font-bold mr-3">Error</span>
+                  <span className="font-semibold text-sm mr-2 text-left flex-auto">{ error.shape?.message }</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div> 
+            ) 
+          }
 					<div className="flex flex-wrap -mx-3 mb-4">
 						<div className="w-full px-3">
 							<label className="block uppercase tracking-wide text-purple-400 text-xs font-bold mb-2">
@@ -80,7 +104,7 @@ const AddPage: NextPage = () => {
 					</div>
 
 					<div className="flex flex-row-reverse">
-						<button onClick={handleSubmit(onSubmit)} className="py-3 px-6 bg-purple-200 font-bold text-gray-600 border-2 border-purple-300 rounded hover:bg-purple-500 hover:text-white">Confirm</button>
+						<button onClick={handleSubmit(onSubmit)} className="py-3 px-6 font-bold text-gray-600 border-2 border-purple-300 rounded bg-purple-200  hover:bg-purple-500 hover:text-white">Confirm</button>
 
 					</div>
 				</div>

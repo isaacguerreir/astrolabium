@@ -48,7 +48,7 @@ model Session {
 }
 
 model Application {
-  id          String          @id @default(uuid())
+  id          String          @id
   name        String          @unique
   description String          @db.Text
   type        ApplicationType

@@ -1,17 +1,18 @@
-import { ApplicationType } from '@prisma/client' 
+import { ApplicationType, Prisma } from '@prisma/client' 
 import { object, string, TypeOf } from "zod";
 import { Context } from '../context'
 import { router, protectedProcedure, publicProcedure } from "../trpc";
 import { createAppSchema, CreateAppInput } from "../../../types/add/apps";
-import { errorStringValidation } from '../../../utils/error';
+import { nameToPath } from '../../../utils/string';
+import { TRPCError } from '@trpc/server';
 
 const deleteAppSchema = object({
-  id: string().uuid(errorStringValidation('Field id must be of type uuid'))
+  id: string()
 }) 
 
 export type DeleteAppInput = TypeOf<typeof deleteAppSchema>
 
-const create = ({
+const create = async ({
   input,
   ctx
 }: {
@@ -19,29 +20,45 @@ const create = ({
   ctx: Context
 }) => {
 	const user = ctx.session?.user 
-	if (user) {
-		const app = ctx.prisma.application.create({
-			data: {
-				name: input.name,
-				description: input.description,
-				visibility: input.visibility,
-				type: ApplicationType.VIEWER,
-        url: input.url,
-        author: { connect: { id: user?.id }}
-			}
-		})
+  try {
+    if (user) {
+      const app = await ctx.prisma.application.create({
+        data: {
+          id: nameToPath(input.name),
+          name: input.name,
+          description: input.description,
+          visibility: input.visibility,
+          type: ApplicationType.VIEWER,
+          url: input.url,
+          author: { connect: { id: user?.id }}
+        }
+      })
 
-		console.log('APP=', app)
-		return app
-	}
+      return app
+    }
+		throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: 'User do not exist.',
+    });
+  } catch(err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === 'P2002') {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'The application name should be unique. Try again with a different name.'
+        });
+
+      }
+    }
+  }
 } 
 
-const all = ({
+const all = async ({
   ctx
 }: {
   ctx: Context
 }) => {
-  return ctx.prisma.application.findMany({ include: { author: true }})
+  return await ctx.prisma.application.findMany({ include: { author: true }})
 }
 
 // TODO: Use detele all instead of only delete

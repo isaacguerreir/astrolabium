@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from '@hookform/resolvers/zod'
 import { trpc } from "../utils/trpc";
 import { createAppSchema, CreateAppInput } from '../types/add/apps'
-import Nav from "../components/nav";
+import { Nav } from "../components/commons";
 import { useState } from "react";
 
 const AddPage: NextPage = () => {
@@ -73,6 +73,26 @@ const AddPage: NextPage = () => {
 							</label>
 							<textarea {...register('description', {required: true} )} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 placeholder:text-sm" id="grid-password" placeholder="How can you describe your application in one or two paragraphs?" />
               { errors.description && <div className="text-sm text-red-400 font-bold">{errors.description.message}</div> }
+						</div>
+					</div>
+
+					<div className="flex flex-wrap -mx-3 mb-4">
+						<div className="w-full px-3">
+							<label className="block uppercase tracking-wide text-purple-400 text-xs font-bold mb-2">
+								App name
+							</label>
+							<input {...register('appName', {required: true} )} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 placeholder:text-sm" id="grid-password" placeholder="What name you used in your webpack federation Module config?" />
+              { errors.appName && <div className="text-sm text-red-400 font-bold">{errors.appName.message}</div> }
+						</div>
+					</div>
+
+					<div className="flex flex-wrap -mx-3 mb-4">
+						<div className="w-full px-3">
+							<label className="block uppercase tracking-wide text-purple-400 text-xs font-bold mb-2">
+								Component name
+							</label>
+							<input {...register('component', {required: true} )} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 placeholder:text-sm" id="grid-password" placeholder="What name you registered your remote component?" />
+              { errors.component && <div className="text-sm text-red-400 font-bold">{errors.component.message}</div> }
 						</div>
 					</div>
 

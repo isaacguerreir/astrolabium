@@ -1,17 +1,18 @@
 import type { NextPage } from "next"
 import Link from 'next/link'
-import React from 'react'
 import Head from "next/head"
+import { useSession } from "next-auth/react"
+import { inferProcedureOutput } from "@trpc/server"
 import { trpc } from "../utils/trpc"
 import { AppRouter } from '../server/trpc/router/_app'
-import { inferProcedureOutput } from "@trpc/server"
-import { Nav, Loading } from '../components/commons'
 import { Apps } from "../components/pages/home"
+import { Nav, Loading } from '../components/commons'
 
 type AppsData = inferProcedureOutput<AppRouter['apps']['all']>
 
 const Home: NextPage = () => {
   const { isLoading, data, refetch } = trpc.apps.all.useQuery() 
+  const { data: session, status } = useSession()
 
 	const handleRefetch = async () => {
     await refetch()
@@ -34,17 +35,21 @@ const Home: NextPage = () => {
 							List of <span className="text-purple-300">Lattice</span> Apps
 						</h1>
 						<div className="flex w-full max-w-4xl flex-row-reverse mb-3 mt-7">
-							<Link href="/add">
-								<button>
-									<div className="px-4 py-2 border-2 border-black flex items-center justify-center rounded font-bold text-gray-700 text-lg hover:bg-gray-700 hover:text-white">
-										<div className="text-xl font-bold mr-3">Create a new app</div>
-										<h2 className="text-lg">+</h2>
-									</div>
-								</button>
-							</Link>
+              {
+                session && (
+                  <Link href="/add">
+                    <button>
+                      <div className="px-4 py-2 border-2 border-black flex items-center justify-center rounded font-bold text-gray-700 text-lg hover:bg-gray-700 hover:text-white">
+                        <div className="text-xl font-bold mr-3">Create a new app</div>
+                        <h2 className="text-lg">+</h2>
+                      </div>
+                    </button>
+                  </Link>
+                )     
+              }
 						</div>
 						<div className="flex flex-col w-full mx-auto justify-center items-center">
-							{ data && <Apps apps={data} refetch={handleRefetch} /> }
+							{ data && <Apps apps={data} session={session} refetch={handleRefetch} /> }
 						</div>
 					</>
 				)}

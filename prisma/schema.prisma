@@ -52,7 +52,9 @@ model Application {
   name        String          @unique
   description String          @db.Text
   type        ApplicationType
-  url         String?
+  appName     String
+  component   String
+  url         String
   visibility  Visibility
   userId      String
   author      User            @relation(fields: [userId], references: [id], onDelete: Cascade)

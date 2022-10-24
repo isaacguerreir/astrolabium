@@ -1,5 +1,5 @@
-// @ts-check
-import { env } from "./src/env/server.mjs";
+import { NextFederationPlugin } from '@module-federation/nextjs-mf'
+import { env } from "./src/env/server.mjs"
 
 /**
  * Don't be scared of the generics here.
@@ -10,7 +10,7 @@ import { env } from "./src/env/server.mjs";
  * @constraint {{import('next').NextConfig}}
  */
 function defineNextConfig(config) {
-  return config;
+  return config
 }
 
 export default defineNextConfig({
@@ -24,7 +24,20 @@ export default defineNextConfig({
   images: {
     domains: ["lh3.googleusercontent.com"]
   },
-  experimental: {
-    urlImports: ["https://astrolabium.s3.sa-east-1.amazonaws.com/assets"]
+	webpack(config, options) {
+    if (!options.isServer) {
+      config.plugins.push(
+				  new NextFederationPlugin({
+          name: 'astrolabium',
+          filename: 'static/chunks/remoteEntry.js',
+          shared: {
+          },
+					extraOptions: {
+            enableImageLoaderFix: true
+          }
+				})
+      )
+    }
+    return config;
   }
-});
+})

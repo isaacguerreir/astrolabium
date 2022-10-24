@@ -23,7 +23,7 @@ const create = async ({
 	const user = ctx.session?.user 
   try {
     if (user) {
-      const app = await ctx.prisma.application.create({
+      return await ctx.prisma.application.create({
         data: {
           id: nameToPath(input.name),
           name: input.name,
@@ -36,8 +36,6 @@ const create = async ({
           author: { connect: { id: user?.id }}
         }
       })
-
-      return app
     }
 		throw new TRPCError({
       code: 'NOT_FOUND',
@@ -87,14 +85,11 @@ const remove = ({
   input: DeleteAppInput,
   ctx: Context
 }) => {
-		const app = ctx.prisma.application.delete({
+		return ctx.prisma.application.delete({
       where: {
         id: input.id
       }
     })
-
-		console.log('APP=', app)
-		return app
 }
 
 

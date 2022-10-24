@@ -1,7 +1,6 @@
 import { Session } from "next-auth"
 import { Popover } from '@headlessui/react'
 import { signIn, signOut, useSession } from "next-auth/react"
-import defaultPhoto from 'https://astrolabium.s3.sa-east-1.amazonaws.com/assets/default_photo.jpg'
 import Image, { StaticImageData } from "next/image"
 
 export const Nav = () => {
@@ -78,7 +77,7 @@ const Profile = ({ session }: { session: Session }) => {
 
       <Popover.Panel className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button">
         <div className="block px-4 py-2 text-sm text-gray-700 border-b" >Hi, { session.user?.name }</div>
-        <div className="flex flex-col justify-end items-end">
+        <div className="flex-col justify-end items-end">
           <button className="block px-4 py-2 text-sm text-gray-700">Settings</button>
           <button className="block px-4 py-2 text-sm text-gray-700" onClick={() => signOut()}>Sign out</button>
         </div>
@@ -92,5 +91,5 @@ const ProfilePicture = ({ staticImage }: { staticImage: StaticImageData | string
   if (staticImage) {
     return <Image className="rounded-full" layout='fill' src={staticImage} alt="" />
   }
-  return <Image className="rounded-full" layout='fill' src={defaultPhoto} alt="" />
+  return <Image className="rounded-full" layout='fill' src="/default_photo.jpg" alt="" />
  }

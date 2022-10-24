@@ -1,4 +1,4 @@
-import { ApplicationType, Prisma } from '@prisma/client' 
+import { Application, ApplicationType, Prisma } from '@prisma/client' 
 import { object, string, TypeOf } from "zod";
 import { Context } from '../context'
 import { router, protectedProcedure, publicProcedure } from "../trpc";
@@ -6,11 +6,12 @@ import { createAppSchema, CreateAppInput } from "../../../types/add/apps";
 import { nameToPath } from '../../../utils/string';
 import { TRPCError } from '@trpc/server';
 
-const deleteAppSchema = object({
+const idInputSchema = object({
   id: string()
 }) 
 
-export type DeleteAppInput = TypeOf<typeof deleteAppSchema>
+export type DeleteAppInput = TypeOf<typeof idInputSchema>
+export type FindOneAppInput = TypeOf<typeof idInputSchema>
 
 const create = async ({
   input,
@@ -18,7 +19,7 @@ const create = async ({
 }: {
   input: CreateAppInput,
   ctx: Context
-}) => {
+}): Promise<Application | undefined> => {
 	const user = ctx.session?.user 
   try {
     if (user) {
@@ -28,7 +29,9 @@ const create = async ({
           name: input.name,
           description: input.description,
           visibility: input.visibility,
+          appName: input.appName,
           type: ApplicationType.VIEWER,
+          component: input.component,
           url: input.url,
           author: { connect: { id: user?.id }}
         }
@@ -61,6 +64,21 @@ const all = async ({
   return await ctx.prisma.application.findMany({ include: { author: true }})
 }
 
+const findOne = async(
+  { 
+    ctx,
+    input
+  }: {
+    ctx: Context,
+    input: FindOneAppInput
+  }) => {
+  return ctx.prisma.application.findUniqueOrThrow({
+    where: {
+      id: input.id
+    }
+  }) 
+}
+
 // TODO: Use detele all instead of only delete
 const remove = ({
   input,
@@ -87,6 +105,9 @@ export const appsRouter = router({
     .input(createAppSchema)
     .mutation(create),
   remove: publicProcedure
-    .input(deleteAppSchema)
-    .mutation(remove)
+    .input(idInputSchema)
+    .mutation(remove),
+  findOne: publicProcedure
+    .input(idInputSchema)
+    .query(findOne)
 });

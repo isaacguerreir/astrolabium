@@ -52,7 +52,7 @@ const SignInButton = () => {
   return (
     <div className="relative ml-3">
       <div>
-        <button type="button" onClick={() => signIn()} className="flex rounded-full bg-gray-800 text-sm font-medium text-base text-gray-300" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+        <button type="button" onClick={() => signIn("google")} className="flex rounded-full bg-gray-800 text-sm font-medium text-base text-gray-300" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
           Sign In
           <div className="sr-only">Sign In</div>
         </button>

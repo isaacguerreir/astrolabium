@@ -32,7 +32,7 @@ const Home: NextPage = () => {
 				{ isLoading ? <Loading /> : (
 					<>
 						<h1 className="text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem]">
-							List of <span className="text-purple-300">Lattice</span> Apps
+							List of <span className="text-purple-300">Astrolabium</span> Apps
 						</h1>
 						<div className="flex w-full max-w-4xl flex-row-reverse mb-3 mt-7">
               {
